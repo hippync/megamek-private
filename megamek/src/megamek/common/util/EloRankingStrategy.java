@@ -35,19 +35,19 @@ public class EloRankingStrategy implements IRankingStrategy{
         double expectedScoreLoser = 1 - expectedScoreWinner;
 
         for (Player winner : winners) {
-            double individualRatingUpdate = winner.getRating() + k * (1 - expectedScoreWinner);
-            winner.setRating((int) individualRatingUpdate);
+            double individualRatingUpdate = winner.getRanking() + k * (1 - expectedScoreWinner);
+            winner.setRanking((int) individualRatingUpdate);
         }
         for (Player loser : losers) {
-            double individualRatingUpdate = loser.getRating() + k * (0 - expectedScoreLoser);
-            loser.setRating((int) individualRatingUpdate);
+            double individualRatingUpdate = loser.getRanking() + k * (0 - expectedScoreLoser);
+            loser.setRanking((int) individualRatingUpdate);
         }
     }
 
     private static double calculateAverageRating(Player[] players) {
         double sum = 0;
         for (Player player : players) {
-            sum += player.getRating();
+            sum += player.getRanking();
         }
         return sum / players.length;
     }
