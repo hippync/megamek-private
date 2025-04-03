@@ -22,6 +22,9 @@ package megamek.server.victory;
 import megamek.common.Game;
 import megamek.common.Player;
 import megamek.common.Report;
+import megamek.common.util.EloRankingStrategy;
+import megamek.common.util.RankingManager;
+
 
 import java.util.*;
 
@@ -36,6 +39,7 @@ public final class VictoryResult {
     private final List<Report> reports = new ArrayList<>();
     private final Map<Integer, Double> playerScores = new HashMap<>();
     private final Map<Integer, Double> teamScores = new HashMap<>();
+    private final RankingManager rankingManager = new RankingManager(new EloRankingStrategy());
 
     private boolean isVictory;
     private double hiScore = 0;
@@ -44,7 +48,7 @@ public final class VictoryResult {
         this.isVictory = win;
     }
 
-    public VictoryResult(boolean win, int player, int team) {
+    public VictoryResult(boolean win, int player, int team, Game game) {
         this.isVictory = win;
         if (player != Player.PLAYER_NONE) {
             setPlayerScore(player, 1.0);
@@ -52,14 +56,44 @@ public final class VictoryResult {
         if (team != Player.TEAM_NONE) {
             setTeamScore(team, 1.0);
         }
+        if (win) {
+            updatePlayerRatings(game);
+        }
     }
 
-    public static VictoryResult noResult() {
-        return new VictoryResult(false, Player.PLAYER_NONE, Player.TEAM_NONE);
+    public static VictoryResult noResult(Game game) {
+        return new VictoryResult(false, Player.PLAYER_NONE, Player.TEAM_NONE, game);
     }
-
-    public static VictoryResult drawResult() {
-        return new VictoryResult(true, Player.PLAYER_NONE, Player.TEAM_NONE);
+    
+    public static VictoryResult drawResult(Game game) {
+        return new VictoryResult(true, Player.PLAYER_NONE, Player.TEAM_NONE, game);
+    }
+    
+    private void updatePlayerRatings(Game game) {
+        int wonPlayer = getWinningPlayer();
+        int wonTeam = getWinningTeam();
+    
+        if (wonPlayer != Player.PLAYER_NONE) {
+            Player[] winningPlayer = {game.getPlayer(wonPlayer)};
+            Player[] allPlayers = game.getPlayersList().toArray(new Player[0]);
+            Player[] losingPlayers = Arrays.stream(allPlayers)
+                                           .filter(player -> player.getId() != wonPlayer)
+                                           .toArray(Player[]::new);
+    
+            rankingManager.updateRankings(winningPlayer, losingPlayers);
+        }
+    
+        if (wonTeam != Player.TEAM_NONE) {
+            Player[] allPlayers = game.getPlayersList().toArray(new Player[0]);
+            Player[] winningPlayers = Arrays.stream(allPlayers)
+                                            .filter(player -> player.getTeam() == wonTeam)
+                                            .toArray(Player[]::new);
+            Player[] losingPlayers = Arrays.stream(allPlayers)
+                                           .filter(player -> player.getTeam() != wonTeam)
+                                           .toArray(Player[]::new);
+    
+            rankingManager.updateRankings(winningPlayers, losingPlayers);
+        }
     }
 
     /**

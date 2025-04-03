@@ -194,6 +194,9 @@ class PlayerTable extends JTable {
                 result.append(UIUtil.BOT_MARKER);
             }
             result.append(player.getName());
+            result.append("<FONT").append(UIUtil.colorString(uiGray())).append(">");
+            result.append("</FONT>");
+            result.append(" Rating:").append(player.getRanking());
             result.append("<BR>");
 
             // Second Line - Team

@@ -29,7 +29,6 @@ import megamek.common.hexarea.BorderHexArea;
 import megamek.common.hexarea.HexArea;
 import megamek.common.icons.Camouflage;
 import megamek.common.options.OptionsConstants;
-import megamek.server.ratings.model.PlayerRating;
 
 /**
  * Represents a player in the game.
@@ -86,6 +85,8 @@ public final class Player extends TurnOrdered {
     private int initialEntityCount;
     private int initialBV;
 
+    private int ranking;
+
     // initiative bonuses go here because we don't know if teams are rolling
     // initiative collectively
     // if they are then we pick the best non-zero bonuses
@@ -105,7 +106,6 @@ public final class Player extends TurnOrdered {
     private transient boolean votedToAllowTeamChange = false;
     private transient boolean votedToAllowGameMaster = false;
 
-    private PlayerRating rating; 
 
     private HexArea fleeArea = new BorderHexArea(true, true, true, true);
     //endregion Variable Declarations
@@ -114,10 +114,13 @@ public final class Player extends TurnOrdered {
     public Player(int id, String name) {
         this.name = name;
         this.id = id;
-        this.rating = new PlayerRating(1000.0);
+        this.ranking = generateInitialRanking();
     }
     //endregion Constructors
 
+    private static int generateInitialRanking() {
+        return (int) (Math.random() * (1600 - 1000  + 1)) + 1000 ;
+    }
     public Vector<Minefield> getMinefields() {
         return visibleMinefields;
     }
@@ -146,10 +149,6 @@ public final class Player extends TurnOrdered {
 
     public boolean containsMinefield(Minefield mf) {
         return visibleMinefields.contains(mf);
-    }
-
-    public PlayerRating getRating() {
-        return this.rating;
     }
 
     public boolean hasMinefields() {
@@ -223,6 +222,14 @@ public final class Player extends TurnOrdered {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public int getRanking() {
+        return ranking;
+    }
+
+    public void setRanking(int ranking) {
+        this.ranking = Math.max(0, ranking);
     }
 
     public int getId() {
