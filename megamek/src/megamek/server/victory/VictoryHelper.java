@@ -26,7 +26,10 @@ import java.util.Map;
 
 import megamek.common.Game;
 import megamek.common.IGame;
+import megamek.common.Player;
 import megamek.common.options.OptionsConstants;
+import megamek.server.ratings.service.RatingManager;
+import megamek.server.ratings.strategy.RatingStrategy;
 import megamek.server.scriptedevent.TriggeredEvent;
 import megamek.server.scriptedevent.VictoryTriggeredEvent;
 import megamek.server.trigger.TriggerSituation;
@@ -43,6 +46,7 @@ public class VictoryHelper implements Serializable {
     private final VictoryCondition playerAgreedVC = new PlayerAgreedVictory();
     private final VictoryCondition battlefieldControlVC = new BattlefieldControlVictory();
     private final List<VictoryCondition> victoryConditions = new ArrayList<>();
+    private RatingManager ratingManager;
 
     /**
      * Constructs the VictoryHelper. Note that this should be called after the lobby phase so that the final victory game settings for this
@@ -57,6 +61,22 @@ public class VictoryHelper implements Serializable {
             buildVClist(game);
         }
     }
+     public VictoryHelper(RatingStrategy strategy) {
+        this.checkForVictory = false;
+        this.ratingManager = new RatingManager(strategy);
+    }
+
+    public void processGameResult(Game game, String winnerId) {
+        List<Player> players = game.getPlayersList();
+    
+        Player player1 = players.get(0); // 1er joueur?
+        Player player2 = players.get(1); // 2e joueur?
+        
+        boolean player1Won = Integer.toString(player1.getId()).equals(winnerId);
+        
+        ratingManager.updateRatings(game, player1.getRating(), player2.getRating(), player1Won);
+    }
+    
 
     /**
      * Checks the various victory conditions if any lead to a game-ending result. Player-agreed /victory is always checked, other victory
