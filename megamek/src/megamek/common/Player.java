@@ -19,6 +19,7 @@
  */
 package megamek.common;
 
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -33,19 +34,21 @@ import megamek.common.options.OptionsConstants;
 /**
  * Represents a player in the game.
  *
- * Note that Player should be usable for any type of game (TW, AS, BF, SBF) and therefore should not
- * make any direct use of Game, Entity, AlphaStrikeElement etc., instead using IGame and InGameObject if necessary.
+ * Note that Player should be usable for any type of game (TW, AS, BF, SBF) and
+ * therefore should not
+ * make any direct use of Game, Entity, AlphaStrikeElement etc., instead using
+ * IGame and InGameObject if necessary.
  * Note that two Players are equal if their ID is equal.
  */
 public final class Player extends TurnOrdered {
 
-    //region Variable Declarations
+    // region Variable Declarations
     private static final long serialVersionUID = 6828849559007455761L;
 
     public static final int PLAYER_NONE = -1;
     public static final int TEAM_NONE = 0;
     public static final int TEAM_UNASSIGNED = -1;
-    public static final String[] TEAM_NAMES = {"No Team", "Team 1", "Team 2", "Team 3", "Team 4", "Team 5"};
+    public static final String[] TEAM_NAMES = { "No Team", "Team 1", "Team 2", "Team 3", "Team 4", "Team 5" };
     private transient IGame game;
 
     private String name;
@@ -85,6 +88,8 @@ public final class Player extends TurnOrdered {
     private int initialEntityCount;
     private int initialBV;
 
+    private int ranking;
+
     // initiative bonuses go here because we don't know if teams are rolling
     // initiative collectively
     // if they are then we pick the best non-zero bonuses
@@ -100,19 +105,25 @@ public final class Player extends TurnOrdered {
 
     private List<ICarryable> groundObjectsToPlace = new ArrayList<>();
 
-    //Voting should not be stored in save game so marked transient
+    // Voting should not be stored in save game so marked transient
     private transient boolean votedToAllowTeamChange = false;
     private transient boolean votedToAllowGameMaster = false;
 
     private HexArea fleeArea = new BorderHexArea(true, true, true, true);
-    //endregion Variable Declarations
+    // endregion Variable Declarations
 
-    //region Constructors
+    // region Constructors
     public Player(int id, String name) {
         this.name = name;
         this.id = id;
+        this.ranking = generateInitialRanking();
     }
-    //endregion Constructors
+    // endregion Constructors
+
+    private static int generateInitialRanking() {
+        SecureRandom random = new SecureRandom();
+        return random.nextInt(601) + 1000; // Generates a number between 1000 and 1600
+    }
 
     public Vector<Minefield> getMinefields() {
         return visibleMinefields;
@@ -146,7 +157,7 @@ public final class Player extends TurnOrdered {
 
     public boolean hasMinefields() {
         return (numMfCmd > 0) || (numMfConv > 0) || (numMfVibra > 0) || (numMfActive > 0) || (numMfInferno > 0)
-              || getGroundObjectsToPlace().size() > 0;
+                || getGroundObjectsToPlace().size() > 0;
     }
 
     public void setNbrMFConventional(int nbrMF) {
@@ -217,6 +228,14 @@ public final class Player extends TurnOrdered {
         this.email = email;
     }
 
+    public int getRanking() {
+        return ranking;
+    }
+
+    public void setRanking(int ranking) {
+        this.ranking = Math.max(0, ranking);
+    }
+
     public int getId() {
         return id;
     }
@@ -259,18 +278,25 @@ public final class Player extends TurnOrdered {
         this.bot = bot;
     }
 
-    /** @return true if this player may become a Game Master. Any human may be a GM*/
+    /**
+     * @return true if this player may become a Game Master. Any human may be a GM
+     */
     public boolean isGameMasterPermitted() {
         return !bot;
     }
 
-    /** @return true if {@link #gameMaster} flag is true and {@link #isGameMasterPermitted()}*/
+    /**
+     * @return true if {@link #gameMaster} flag is true and
+     *         {@link #isGameMasterPermitted()}
+     */
     public boolean isGameMaster() {
         return (isGameMasterPermitted() && gameMaster);
     }
 
     /**
-     * If you are checking to see this player is a Game Master, use {@link #isGameMaster()} ()} instead
+     * If you are checking to see this player is a Game Master, use
+     * {@link #isGameMaster()} ()} instead
+     * 
      * @return the value of gameMaster flag, without checking if it is permitted.
      */
     public boolean getGameMaster() {
@@ -278,14 +304,15 @@ public final class Player extends TurnOrdered {
     }
 
     /**
-     * sets {@link #gameMaster} but this only allows GM status if other conditions permits it.
+     * sets {@link #gameMaster} but this only allows GM status if other conditions
+     * permits it.
      * see {@link #isGameMaster()}
      */
     public void setGameMaster(boolean gameMaster) {
         this.gameMaster = gameMaster;
     }
 
-    /** @return true if {@link #observer} flag is true and not in VICTORY phase*/
+    /** @return true if {@link #observer} flag is true and not in VICTORY phase */
     public boolean isObserver() {
         if ((game != null) && game.getPhase().isVictory()) {
             return false;
@@ -303,15 +330,18 @@ public final class Player extends TurnOrdered {
     }
 
     /**
-     *  sets {@link #seeAll}. This will only enable seeAll if other conditions allow it.
-     *  see {@link #canIgnoreDoubleBlind()}
+     * sets {@link #seeAll}. This will only enable seeAll if other conditions allow
+     * it.
+     * see {@link #canIgnoreDoubleBlind()}
      */
     public void setSeeAll(boolean seeAll) {
         this.seeAll = seeAll;
     }
 
     /**
-     * If you are checking to see if double-blind applies to this player, use {@link #canIgnoreDoubleBlind()}
+     * If you are checking to see if double-blind applies to this player, use
+     * {@link #canIgnoreDoubleBlind()}
+     * 
      * @return the value of seeAll flag, without checking if it is permitted
      */
     public boolean getSeeAll() {
@@ -319,7 +349,9 @@ public final class Player extends TurnOrdered {
     }
 
     /**
-     * If you are checking to see if double-blind applies to this player, use {@link #canIgnoreDoubleBlind()}
+     * If you are checking to see if double-blind applies to this player, use
+     * {@link #canIgnoreDoubleBlind()}
+     * 
      * @return true if {@link #seeAll} is true and is permitted
      */
     public boolean canSeeAll() {
@@ -327,9 +359,11 @@ public final class Player extends TurnOrdered {
     }
 
     /**
-     * If you are checking to see if double-blind applies to this player, use {@link #canIgnoreDoubleBlind()}
+     * If you are checking to see if double-blind applies to this player, use
+     * {@link #canIgnoreDoubleBlind()}
+     * 
      * @return true if player is allowed use seeAll
-     * */
+     */
     public boolean isSeeAllPermitted() {
         return gameMaster || observer;
     }
@@ -340,15 +374,18 @@ public final class Player extends TurnOrdered {
     }
 
     /**
-     *  sets {@link #seeAll}. This will only enable seeAll if other conditions allow it.
-     *  see {@link #canIgnoreDoubleBlind()}
+     * sets {@link #seeAll}. This will only enable seeAll if other conditions allow
+     * it.
+     * see {@link #canIgnoreDoubleBlind()}
      */
     public void setSingleBlind(boolean singleBlind) {
         this.singleBlind = singleBlind;
     }
 
     /**
-     * If you are checking to see this player can ignore double-blind, use {@link #canIgnoreDoubleBlind()} ()} instead
+     * If you are checking to see this player can ignore double-blind, use
+     * {@link #canIgnoreDoubleBlind()} ()} instead
+     * 
      * @return the value of singleBlind flag, without checking if it is permitted.
      */
     public boolean getSingleBlind() {
@@ -356,24 +393,30 @@ public final class Player extends TurnOrdered {
     }
 
     /**
-     * @return true if singleBlind flag is true and {@link #isSingleBlindPermitted()}
+     * @return true if singleBlind flag is true and
+     *         {@link #isSingleBlindPermitted()}
      */
     public boolean canSeeSingleBlind() {
         return (isSingleBlindPermitted() && singleBlind);
     }
 
     /**
-     * If you are checking to see if double-blind applies to this player, use {@link #canIgnoreDoubleBlind()}
+     * If you are checking to see if double-blind applies to this player, use
+     * {@link #canIgnoreDoubleBlind()}
+     * 
      * @return true if player is allowed use singleblind (bots only)
-     * */
+     */
     public boolean isSingleBlindPermitted() {
         return bot;
     }
 
     /**
-     * Double-blind uses Line-of-sight to determine which units are displayed on the board
-     * and in reports. seeAll and singleBlind flags allow this to be ignored, granting a view
+     * Double-blind uses Line-of-sight to determine which units are displayed on the
+     * board
+     * and in reports. seeAll and singleBlind flags allow this to be ignored,
+     * granting a view
      * of the entire map and units.
+     * 
      * @return true if this player ignores the double-blind setting.
      */
     public boolean canIgnoreDoubleBlind() {
@@ -462,7 +505,7 @@ public final class Player extends TurnOrdered {
             return true;
         }
         return (id != other.getId())
-              && ((team == TEAM_NONE) || (team == TEAM_UNASSIGNED) || (team != other.getTeam()));
+                && ((team == TEAM_NONE) || (team == TEAM_UNASSIGNED) || (team != other.getTeam()));
     }
 
     public void setAdmitsDefeat(boolean admitsDefeat) {
@@ -478,7 +521,8 @@ public final class Player extends TurnOrdered {
     }
 
     /**
-     * Collection of carryable objects that this player will be placing during the game.
+     * Collection of carryable objects that this player will be placing during the
+     * game.
      */
     public List<ICarryable> getGroundObjectsToPlace() {
         return groundObjectsToPlace;
@@ -532,16 +576,18 @@ public final class Player extends TurnOrdered {
     }
 
     /**
-     * Returns the combined strength (Battle Value/PV) of all the player's usable assets. This includes only
-     * units that should count according to {@link InGameObject#countForStrengthSum()}.
+     * Returns the combined strength (Battle Value/PV) of all the player's usable
+     * assets. This includes only
+     * units that should count according to
+     * {@link InGameObject#countForStrengthSum()}.
      *
      * @return The combined strength (BV/PV) of all the player's assets
      */
     public int getBV() {
         return game.getInGameObjects().stream()
-              .filter(this::isMyUnit)
-              .filter(InGameObject::countForStrengthSum)
-              .mapToInt(InGameObject::getStrength).sum();
+                .filter(this::isMyUnit)
+                .filter(InGameObject::countForStrengthSum)
+                .mapToInt(InGameObject::getStrength).sum();
     }
 
     /**
@@ -607,8 +653,9 @@ public final class Player extends TurnOrdered {
     }
 
     /**
-     * @return the bonus to this player's initiative rolls for the highest value initiative
-     * (i.e. the 'commander')
+     * @return the bonus to this player's initiative rolls for the highest value
+     *         initiative
+     *         (i.e. the 'commander')
      */
     public int getCommandBonus() {
         if (game == null) {
@@ -620,25 +667,29 @@ public final class Player extends TurnOrdered {
                 Entity entity = (Entity) unit;
                 boolean useCommandInit = game.getOptions().booleanOption(OptionsConstants.RPG_COMMAND_INIT);
                 boolean checkThisTurn = ((null != entity.getOwner())
-                      && entity.getOwner().equals(this)
-                      && !entity.isDestroyed()
-                      && entity.getCrew().isActive()
-                      && !entity.isCaptured()
-                      && !(entity instanceof MekWarrior))
-                      && ((entity.isDeployed() && !entity.isOffBoard()) || (entity.getDeployRound() == (game.getCurrentRound() + 1)));
+                        && entity.getOwner().equals(this)
+                        && !entity.isDestroyed()
+                        && entity.getCrew().isActive()
+                        && !entity.isCaptured()
+                        && !(entity instanceof MekWarrior))
+                        && ((entity.isDeployed() && !entity.isOffBoard())
+                                || (entity.getDeployRound() == (game.getCurrentRound() + 1)));
                 if (checkThisTurn) {
                     int bonus = 0;
                     if (useCommandInit) {
                         bonus = entity.getCrew().getCommandBonus();
                     }
-                    //Even if the RPG option is not enabled, we still get the command bonus provided by special equipment.
-                    //Since we are not designating a single force commander at this point, we assume a superheavy tripod
-                    //is the force commander if that gives the highest bonus.
+                    // Even if the RPG option is not enabled, we still get the command bonus
+                    // provided by special equipment.
+                    // Since we are not designating a single force commander at this point, we
+                    // assume a superheavy tripod
+                    // is the force commander if that gives the highest bonus.
                     if (entity.hasCommandConsoleBonus() || entity.getCrew().hasActiveTechOfficer()) {
                         bonus += 2;
                     }
-                    //Once we've gotten the status of the command console (if any), reset the flag that tracks
-                    //the previous turn's action.
+                    // Once we've gotten the status of the command console (if any), reset the flag
+                    // that tracks
+                    // the previous turn's action.
                     if (bonus > commandb) {
                         commandb = bonus;
                     }
@@ -657,12 +708,14 @@ public final class Player extends TurnOrdered {
             team = 0;
         }
         return "<B><font color='" + getColour().getHexString(0x00F0F0F0) + "'>" + getName() +
-              " (" + TEAM_NAMES[team] + ")</font></B>";
+                " (" + TEAM_NAMES[team] + ")</font></B>";
     }
 
     /**
-     * Clears any data from this Player that should not be transmitted to other players from the server,
-     * such as email addresses. Note that this changes this Player's data permanently and should typically
+     * Clears any data from this Player that should not be transmitted to other
+     * players from the server,
+     * such as email addresses. Note that this changes this Player's data
+     * permanently and should typically
      * be done to a copy of the player, see {@link #copy()}.
      */
     public void redactPrivateData() {
@@ -745,15 +798,17 @@ public final class Player extends TurnOrdered {
     }
 
     /**
-     * @return The area of the board this player's units are allowed to flee from; An empty area as return value means they
-     * may not flee at all.
+     * @return The area of the board this player's units are allowed to flee from;
+     *         An empty area as return value means they
+     *         may not flee at all.
      */
     public HexArea getFleeZone() {
         return fleeArea;
     }
 
     /**
-     * Sets the board area this player's units may flee from. The area may be empty, in which case the units may not flee.
+     * Sets the board area this player's units may flee from. The area may be empty,
+     * in which case the units may not flee.
      *
      * @param fleeArea The new flee area.
      * @see megamek.common.hexarea.BorderHexArea

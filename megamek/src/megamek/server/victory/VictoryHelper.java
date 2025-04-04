@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Map;
 
 import megamek.common.Game;
-import megamek.common.IGame;
 import megamek.common.options.OptionsConstants;
 import megamek.server.scriptedevent.TriggeredEvent;
 import megamek.server.scriptedevent.VictoryTriggeredEvent;
@@ -72,6 +71,7 @@ public class VictoryHelper implements Serializable {
         // Always check for chat-command /victory, so games without victory conditions can be completed
         VictoryResult playerAgreedVR = playerAgreedVC.checkVictory(game, context);
         if (playerAgreedVR.isVictory()) {
+            playerAgreedVR.checkAndUpdateVictory(game);
             return playerAgreedVR;
         }
 
@@ -81,6 +81,7 @@ public class VictoryHelper implements Serializable {
                 if (event instanceof VictoryTriggeredEvent victoryEvent) {
                     VictoryResult victoryResult = victoryEvent.checkVictory(game, context);
                     if (victoryResult.isVictory()) {
+                        victoryResult.checkAndUpdateVictory(game);
                         return victoryResult;
                     }
                 }
@@ -91,6 +92,7 @@ public class VictoryHelper implements Serializable {
         if (checkForVictory) {
             VictoryResult result = checkOptionalVictoryConditions(game, context);
             if (result.isVictory()) {
+                result.checkAndUpdateVictory(game);
                 return result;
             }
 
@@ -98,6 +100,7 @@ public class VictoryHelper implements Serializable {
             // this could be made optional to allow the game to continue once alone if there's a use case
             VictoryResult battlefieldControlVR = battlefieldControlVC.checkVictory(game, context);
             if (battlefieldControlVR.isVictory()) {
+                battlefieldControlVR.checkAndUpdateVictory(game);
                 return battlefieldControlVR;
             }
         }

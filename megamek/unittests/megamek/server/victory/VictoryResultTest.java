@@ -27,9 +27,11 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.Test;
+import java.util.List;
 
 import megamek.common.Game;
 import megamek.common.Player;
+import megamek.common.util.EloRankingStrategy;
 
 class VictoryResultTest {
 
@@ -172,6 +174,77 @@ class VictoryResultTest {
 
         assertEquals(1, victoryResult.getScoringTeams().size());
         assertEquals(3.0, victoryResult.getTeamScore(1), 0.0);
+    }
+
+    @Test
+    void testCheckAndUpdateVictory_PlayerWin() {
+        VictoryResult result = new VictoryResult(true);
+        result.setPlayerScore(1, 1.0);
+
+        Player player1 = mock(Player.class);
+        when(player1.getId()).thenReturn(1);
+        when(player1.getTeam()).thenReturn(1);
+
+        Player player2 = mock(Player.class);
+        when(player2.getId()).thenReturn(2);
+        when(player2.getTeam()).thenReturn(2);
+
+        Game game = mock(Game.class);
+        when(game.getPlayer(1)).thenReturn(player1);
+        when(game.getPlayersList()).thenReturn(List.of(player1, player2));
+
+        result.checkAndUpdateVictory(game);
+    }
+
+    @Test
+    void testCheckAndUpdateVictory_TeamWin() {
+        VictoryResult result = new VictoryResult(true);
+        result.setTeamScore(1, 1.0);
+
+        Player player1 = mock(Player.class);
+        when(player1.getId()).thenReturn(1);
+        when(player1.getTeam()).thenReturn(1);
+
+        Player player2 = mock(Player.class);
+        when(player2.getId()).thenReturn(2);
+        when(player2.getTeam()).thenReturn(2);
+
+        Game game = mock(Game.class);
+        when(game.getPlayer(1)).thenReturn(player1);
+        when(game.getPlayersList()).thenReturn(List.of(player1, player2));
+
+        result.checkAndUpdateVictory(game);
+    }
+
+    @Test
+    void testCheckAndUpdateVictory_NoVictory() {
+        VictoryResult result = new VictoryResult(false);
+
+        Game game = mock(Game.class);
+        result.checkAndUpdateVictory(game);
+    }
+
+    @Test
+    void testMultipleWinners() {
+        EloRankingStrategy rankingStrategy = new EloRankingStrategy();
+
+        Player winner1 = new Player(1, "Winner1");
+        winner1.setRanking(1500);
+
+        Player winner2 = new Player(2, "Winner2");
+        winner2.setRanking(1450);
+
+        Player loser = new Player(3, "Loser");
+        loser.setRanking(1400);
+
+        Player[] winners = { winner1, winner2 };
+        Player[] losers = { loser };
+
+        rankingStrategy.updateRankings(winners, losers);
+
+        assertTrue(winner1.getRanking() > 1500, "Winner1 should have a higher ranking");
+        assertTrue(winner2.getRanking() > 1450, "Winner2 should have a higher ranking");
+        assertTrue(loser.getRanking() < 1400, "Loser should have a lower ranking");
     }
 
 }
