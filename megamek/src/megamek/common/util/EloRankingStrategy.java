@@ -26,7 +26,8 @@ public class EloRankingStrategy implements IRankingStrategy{
         this.k = k;
         this.exponentFactor = exponentFactor;
     }
-
+    
+    @Override
     public void updateRankings(Player[] winners, Player[] losers) {
         double ratingWinner = calculateAverageRating(winners);
         double ratingLoser = calculateAverageRating(losers);
