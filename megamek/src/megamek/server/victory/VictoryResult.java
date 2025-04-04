@@ -99,9 +99,7 @@ public final class VictoryResult {
     }
     
     public void checkAndUpdateVictory(Game game) {
-        if (isVictory) {
             updatePlayerRatings(game);
-        }
     }
 
     /**
