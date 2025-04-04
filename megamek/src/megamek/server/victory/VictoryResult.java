@@ -23,7 +23,7 @@ import megamek.common.Game;
 import megamek.common.Player;
 import megamek.common.Report;
 import megamek.common.util.EloRankingStrategy;
-import megamek.common.util.RankingManager;
+import megamek.common.util.PlayerRankingManager;
 
 
 import java.util.*;
@@ -39,7 +39,7 @@ public final class VictoryResult {
     private final List<Report> reports = new ArrayList<>();
     private final Map<Integer, Double> playerScores = new HashMap<>();
     private final Map<Integer, Double> teamScores = new HashMap<>();
-    private final RankingManager rankingManager = new RankingManager(new EloRankingStrategy());
+    private final PlayerRankingManager rankingManager = new PlayerRankingManager(new EloRankingStrategy());
 
     private boolean isVictory;
     private double hiScore = 0;
@@ -68,7 +68,7 @@ public final class VictoryResult {
 
     private void updateRankingsForPlayers(Player[] winningPlayers, Player[] losingPlayers) {
         if (winningPlayers.length > 0 && losingPlayers.length > 0) {
-            rankingManager.updateRankings(winningPlayers, losingPlayers);
+            rankingManager.updatePlayerRankings(winningPlayers, losingPlayers);
         }
     }
     

@@ -1,55 +1,71 @@
 package megamek.common.util;
 
-/**
- * https://mattmazzola.medium.com/implementing-the-elo-rating-system-a085f178e065
-*/
 import megamek.common.Player;
 
-public class EloRankingStrategy implements IRankingStrategy{
+/**
+ * Implémentation du système de notation Elo pour MegaMek.
+ * Permet d'évaluer le niveau des joueurs (humains ou IA) dans un cadre compétitif.
+ */
+public class EloRankingStrategy implements RankingStrategy {
 
-    private static final int DEFAULT_SCALE_FACTOR = 400;
-    private static final int DEFAULT_K = 32;
-    private static final int DEFAULT_EXPONENT_FACTOR = 10;
+    // Valeurs par défaut pour un environnement compétitif
+    private static final int DEFAULT_K_FACTOR = 40;       
+    private static final int DEFAULT_RATING_DIVISOR = 400;
+    private static final int DEFAULT_EXP_BASE = 10;
 
-    private final int scaleFactor;
-    private final int k;
-    private final int exponentFactor;
+    private final int kFactor;
+    private final int ratingDivisor;
+    private final int exponentBase;
 
+    // Constructeur par défaut
     public EloRankingStrategy() {
-        this.scaleFactor = DEFAULT_SCALE_FACTOR;
-        this.k = DEFAULT_K;
-        this.exponentFactor = DEFAULT_EXPONENT_FACTOR;
+        this(DEFAULT_K_FACTOR, DEFAULT_RATING_DIVISOR, DEFAULT_EXP_BASE);
     }
 
-    public EloRankingStrategy(int scaleFactor, int k, int exponentFactor) {
-        this.scaleFactor = scaleFactor;
-        this.k = k;
-        this.exponentFactor = exponentFactor;
+    // Constructeur personnalisé (pour extensibilité ou ajustements futurs)
+    public EloRankingStrategy(int kFactor, int ratingDivisor, int exponentBase) {
+        this.kFactor = kFactor;
+        this.ratingDivisor = ratingDivisor;
+        this.exponentBase = exponentBase;
     }
-    
+
     @Override
     public void updateRankings(Player[] winners, Player[] losers) {
-        double ratingWinner = calculateAverageRating(winners);
-        double ratingLoser = calculateAverageRating(losers);
+        double averageWinnerRating = computeAverageRating(winners);
+        double averageLoserRating = computeAverageRating(losers);
 
-        double expectedScoreWinner = 1 / (1.0 + Math.pow(exponentFactor, (ratingLoser - ratingWinner) / scaleFactor));
-        double expectedScoreLoser = 1 - expectedScoreWinner;
+        double expectedScoreWinners = computeExpectedScore(averageWinnerRating, averageLoserRating);
+        double expectedScoreLosers = 1 - expectedScoreWinners;
 
+        // Mise à jour des gagnants
         for (Player winner : winners) {
-            double individualRatingUpdate = winner.getRanking() + k * (1 - expectedScoreWinner);
-            winner.setRanking((int) individualRatingUpdate);
+            int updatedRating = calculateNewRating(winner.getRanking(), 1, expectedScoreWinners);
+            winner.setRanking(updatedRating);
         }
+
+        // Mise à jour des perdants
         for (Player loser : losers) {
-            double individualRatingUpdate = loser.getRanking() + k * (0 - expectedScoreLoser);
-            loser.setRanking((int) individualRatingUpdate);
+            int updatedRating = calculateNewRating(loser.getRanking(), 0, expectedScoreLosers);
+            loser.setRanking(updatedRating);
         }
     }
 
-    private static double calculateAverageRating(Player[] players) {
-        double sum = 0;
+    private double computeAverageRating(Player[] players) {
+        if (players == null || players.length == 0) return 0;
+        double total = 0;
         for (Player player : players) {
-            sum += player.getRanking();
+            total += player.getRanking();
         }
-        return sum / players.length;
+        return total / players.length;
+    }
+
+    private double computeExpectedScore(double ratingA, double ratingB) {
+        double exponent = (ratingB - ratingA) / (double) ratingDivisor;
+        return 1.0 / (1.0 + Math.pow(exponentBase, exponent));
+    }
+
+    private int calculateNewRating(double currentRating, int actualScore, double expectedScore) {
+        double delta = kFactor * (actualScore - expectedScore);
+        return (int) Math.round(currentRating + delta);
     }
 }
