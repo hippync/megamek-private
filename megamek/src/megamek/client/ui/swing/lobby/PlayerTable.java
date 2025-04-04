@@ -48,7 +48,6 @@ import megamek.client.ui.swing.util.UIUtil;
 import megamek.common.Board;
 import megamek.common.IStartingPositions;
 import megamek.common.Player;
-import megamek.common.options.GameOptions;
 import megamek.common.options.OptionsConstants;
 
 class PlayerTable extends JTable {
@@ -194,9 +193,9 @@ class PlayerTable extends JTable {
                 result.append(UIUtil.BOT_MARKER);
             }
             result.append(player.getName());
-            result.append("<FONT").append(UIUtil.colorString(uiGray())).append(">");
+           result.append("<FONT").append(UIUtil.colorString(uiGray())).append(">");
             result.append("</FONT>");
-            result.append(" Rating:").append(player.getRanking());
+            result.append(" Ranking:").append(player.getRanking());
             result.append("<BR>");
 
             // Second Line - Team

@@ -21,16 +21,11 @@ package megamek.server.victory;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
 import megamek.common.Game;
-import megamek.common.IGame;
-import megamek.common.Player;
 import megamek.common.options.OptionsConstants;
-import megamek.common.util.EloRankingStrategy;
-import megamek.common.util.RankingManager;
 import megamek.server.scriptedevent.TriggeredEvent;
 import megamek.server.scriptedevent.VictoryTriggeredEvent;
 import megamek.server.trigger.TriggerSituation;
