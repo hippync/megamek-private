@@ -66,40 +66,38 @@ public final class VictoryResult {
         return new VictoryResult(true, Player.PLAYER_NONE, Player.TEAM_NONE);
     }
 
+    private void updateRankingsForPlayers(Game game, Player[] winningPlayers, Player[] losingPlayers) {
+        if (winningPlayers.length > 0 && losingPlayers.length > 0) {
+            rankingManager.updateRankings(winningPlayers, losingPlayers);
+        }
+    }
+    
     private void updatePlayerRatings(Game game) {
         int wonPlayer = getWinningPlayer();
         int wonTeam = getWinningTeam();
     
         if (wonPlayer != Player.PLAYER_NONE) {
             Player winner = game.getPlayer(wonPlayer);
-            if (winner != null) {
-                Player[] winningPlayer = { winner };
-                Player[] allPlayers = game.getPlayersList().toArray(new Player[0]);
-                Player[] losingPlayers = Arrays.stream(allPlayers)
-                                               .filter(player -> player != null && player.getId() != wonPlayer)
-                                               .toArray(Player[]::new);
-                
-                if (losingPlayers.length > 0) {
-                    rankingManager.updateRankings(winningPlayer, losingPlayers);
-                }
-            }
+            Player[] winningPlayer = { winner };
+            Player[] allPlayers = game.getPlayersList().toArray(new Player[0]);
+            Player[] losingPlayers = Arrays.stream(allPlayers)
+                                           .filter(player -> player != null && player.getId() != wonPlayer)
+                                           .toArray(Player[]::new);
+            updateRankingsForPlayers(game, winningPlayer, losingPlayers);
         }
     
         if (wonTeam != Player.TEAM_NONE) {
             Player[] allPlayers = game.getPlayersList().toArray(new Player[0]);
             Player[] winningPlayers = Arrays.stream(allPlayers)
-                                            .filter(player -> player != null && player.getTeam() == wonTeam)
-                                            .toArray(Player[]::new);
+                                           .filter(player -> player != null && player.getTeam() == wonTeam)
+                                           .toArray(Player[]::new);
             Player[] losingPlayers = Arrays.stream(allPlayers)
                                            .filter(player -> player != null && player.getTeam() != wonTeam)
                                            .toArray(Player[]::new);
-    
-            if (winningPlayers.length > 0 && losingPlayers.length > 0) {
-                rankingManager.updateRankings(winningPlayers, losingPlayers);
-            }
+            updateRankingsForPlayers(game, winningPlayers, losingPlayers);
         }
     }
-
+    
     public void checkAndUpdateVictory(Game game) {
         if (isVictory) {
             updatePlayerRatings(game);
