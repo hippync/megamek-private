@@ -21,6 +21,7 @@ package megamek.server.victory;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -28,6 +29,8 @@ import megamek.common.Game;
 import megamek.common.IGame;
 import megamek.common.Player;
 import megamek.common.options.OptionsConstants;
+import megamek.common.util.EloRankingStrategy;
+import megamek.common.util.RankingManager;
 import megamek.server.scriptedevent.TriggeredEvent;
 import megamek.server.scriptedevent.VictoryTriggeredEvent;
 import megamek.server.trigger.TriggerSituation;
@@ -86,7 +89,7 @@ public class VictoryHelper implements Serializable {
                     }
                 }
             }
-            return VictoryResult.drawResult(game);
+            return VictoryResult.drawResult();
         }
 
         if (checkForVictory) {
@@ -103,7 +106,7 @@ public class VictoryHelper implements Serializable {
             }
         }
 
-        return VictoryResult.noResult(game);
+        return VictoryResult.noResult();
     }
 
     /**
@@ -146,7 +149,7 @@ public class VictoryHelper implements Serializable {
         if (combinedResult.isVictory()) {
             return combinedResult;
         } else if (game.gameTimerIsExpired()) {
-            return VictoryResult.drawResult(game);
+            return VictoryResult.drawResult();
         } else {
             return combinedResult;
         }
