@@ -66,7 +66,7 @@ public final class VictoryResult {
         return new VictoryResult(true, Player.PLAYER_NONE, Player.TEAM_NONE);
     }
 
-    private void updateRankingsForPlayers(Game game, Player[] winningPlayers, Player[] losingPlayers) {
+    private void updateRankingsForPlayers(Player[] winningPlayers, Player[] losingPlayers) {
         if (winningPlayers.length > 0 && losingPlayers.length > 0) {
             rankingManager.updateRankings(winningPlayers, losingPlayers);
         }
@@ -83,7 +83,7 @@ public final class VictoryResult {
             Player[] losingPlayers = Arrays.stream(allPlayers)
                                            .filter(player -> player != null && player.getId() != wonPlayer)
                                            .toArray(Player[]::new);
-            updateRankingsForPlayers(game, winningPlayer, losingPlayers);
+            updateRankingsForPlayers(winningPlayer, losingPlayers);
         }
     
         if (wonTeam != Player.TEAM_NONE) {
@@ -94,7 +94,7 @@ public final class VictoryResult {
             Player[] losingPlayers = Arrays.stream(allPlayers)
                                            .filter(player -> player != null && player.getTeam() != wonTeam)
                                            .toArray(Player[]::new);
-            updateRankingsForPlayers(game, winningPlayers, losingPlayers);
+            updateRankingsForPlayers(winningPlayers, losingPlayers);
         }
     }
     

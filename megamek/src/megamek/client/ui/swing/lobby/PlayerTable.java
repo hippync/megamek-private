@@ -89,9 +89,10 @@ class PlayerTable extends JTable {
         }
 
         StringBuilder result = new StringBuilder("<HTML><BODY>");
-        result.append("<FONT").append(UIUtil.colorString(player.getColour().getColour())).append(">");
+        result.append("<SPAN style=\"color:").append(UIUtil.colorString(player.getColour().getColour())).append("\">");
         result.append(player.getName());
-        result.append("</FONT>");
+        result.append("</SPAN>");
+        result.append("</BODY></HTML>");
 
         if ((lobby.client() instanceof BotClient) && player.equals(lobby.localPlayer())) {
             String msg_thisbot = Messages.getString("ChatLounge.ThisBot");
