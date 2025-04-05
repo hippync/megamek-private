@@ -42,7 +42,6 @@ public final class VictoryResult {
     private final PlayerRankingManager rankingManager = new PlayerRankingManager(new EloRankingStrategy());
 
     private boolean isVictory;
-    private double hiScore = 0;
 
     public VictoryResult(boolean win) {
         this.isVictory = win;
@@ -149,12 +148,10 @@ public final class VictoryResult {
 
     public void setPlayerScore(int id, double score) {
         playerScores.put(id, score);
-        updateHiScore();
     }
 
     public void setTeamScore(int id, double score) {
         teamScores.put(id, score);
-        updateHiScore();
     }
 
     double getPlayerScore(int id) {
@@ -242,17 +239,6 @@ public final class VictoryResult {
         }
 
         return draw ? defaultPlayerOrTeam : maxPlayerOrTeam;
-    }
-
-    private void updateHiScore() {
-        hiScore = Double.MIN_VALUE;
-        for (Double d : playerScores.values()) {
-            hiScore = Math.max(hiScore, d);
-        }
-
-        for (Double d : teamScores.values()) {
-            hiScore = Math.max(hiScore, d);
-        }
     }
 
     @Override
