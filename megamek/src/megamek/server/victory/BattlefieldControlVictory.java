@@ -24,6 +24,8 @@ import megamek.common.Player;
 
 import java.io.Serializable;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * This class represents a battlefield control (units of only one team left alive) victory
