@@ -34,48 +34,30 @@ public class BattlefieldControlVictory implements VictoryCondition, Serializable
 
     @Override
     public VictoryResult checkVictory(Game game, Map<String, Object> ctx) {
-        // check all players/teams for aliveness
-        int playersAlive = 0;
-        Player lastPlayer = null;
-        boolean oneTeamAlive = false;
-        int lastTeam = Player.TEAM_NONE;
-        boolean unteamedAlive = false;
-        for (Player player : game.getPlayersList()) {
-            int team = player.getTeam();
-            if (game.getLiveDeployedEntitiesOwnedBy(player) <= 0) {
-                continue;
-            }
-            // we found a live one!
-            playersAlive++;
-            lastPlayer = player;
-            // check team
-            if (team == Player.TEAM_NONE) {
-                unteamedAlive = true;
-            } else if (lastTeam == Player.TEAM_NONE) {
-                // possibly only one team alive
-                oneTeamAlive = true;
-                lastTeam = team;
-            } else if (team != lastTeam) {
-                // more than one team alive
-                oneTeamAlive = false;
-                lastTeam = team;
-            }
-        }
+        var alivePlayers = game.getPlayersList().stream()
+                                 .filter(p -> game.getLiveDeployedEntitiesOwnedBy(p) > 0)
+                                 .toList();
 
-        // check if there's one player alive
-        if (playersAlive < 1) {
+        if (alivePlayers.isEmpty()) {
             return VictoryResult.drawResult();
-        } else if (playersAlive == 1) {
-            if (lastPlayer.getTeam() == Player.TEAM_NONE) {
-                // individual victory
-                return new VictoryResult(true, lastPlayer.getId(), Player.TEAM_NONE);
+        }
+
+        if (alivePlayers.size() == 1) {
+            Player last = alivePlayers.get(0);
+            if (last.getTeam() == Player.TEAM_NONE) {
+                return new VictoryResult(true, last.getId(), Player.TEAM_NONE);
             }
         }
 
-        // did we only find one live team?
-        if (oneTeamAlive && !unteamedAlive) {
-            // team victory
-            return new VictoryResult(true, Player.PLAYER_NONE, lastTeam);
+        Set<Integer> aliveTeams = alivePlayers.stream()
+                                        .map(Player::getTeam)
+                                        .filter(t -> t != Player.TEAM_NONE)
+                                        .collect(Collectors.toSet());
+
+        boolean anyUnteamed = alivePlayers.stream().anyMatch(p -> p.getTeam() == Player.TEAM_NONE);
+
+        if (aliveTeams.size() == 1 && !anyUnteamed) {
+            return new VictoryResult(true, Player.PLAYER_NONE, aliveTeams.iterator().next());
         }
 
         return VictoryResult.noResult();
