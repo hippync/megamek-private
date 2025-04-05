@@ -68,44 +68,45 @@ public class VictoryHelper implements Serializable {
      * @see VictoryResult#drawResult()
      */
     public VictoryResult checkForVictory(Game game, Map<String, Object> context) {
-        // Always check for chat-command /victory, so games without victory conditions can be completed
         VictoryResult playerAgreedVR = playerAgreedVC.checkVictory(game, context);
         if (playerAgreedVR.isVictory()) {
-            playerAgreedVR.checkAndUpdateVictory(game);
-            return playerAgreedVR;
+            return updateAndReturn(playerAgreedVR, game);
         }
 
         if (gameEndsByScriptedEvent(game)) {
-            // The game does end now; therefore, test all victory events. If none are met, the game is a draw
-            for (TriggeredEvent event : game.scriptedEvents()) {
-                if (event instanceof VictoryTriggeredEvent victoryEvent) {
-                    VictoryResult victoryResult = victoryEvent.checkVictory(game, context);
-                    if (victoryResult.isVictory()) {
-                        victoryResult.checkAndUpdateVictory(game);
-                        return victoryResult;
-                    }
-                }
-            }
-            return VictoryResult.drawResult();
+            return checkVictoryFromScriptedEvents(game, context);
         }
 
         if (checkForVictory) {
             VictoryResult result = checkOptionalVictoryConditions(game, context);
             if (result.isVictory()) {
-                result.checkAndUpdateVictory(game);
-                return result;
+                return updateAndReturn(result, game);
             }
 
-            // Check for battlefield control; this is currently an automatic victory when VCs are checked at all
-            // this could be made optional to allow the game to continue once alone if there's a use case
             VictoryResult battlefieldControlVR = battlefieldControlVC.checkVictory(game, context);
             if (battlefieldControlVR.isVictory()) {
-                battlefieldControlVR.checkAndUpdateVictory(game);
-                return battlefieldControlVR;
+                return updateAndReturn(battlefieldControlVR, game);
             }
         }
 
         return VictoryResult.noResult();
+    }
+
+    private VictoryResult updateAndReturn(VictoryResult result, Game game) {
+        result.checkAndUpdateVictory(game);
+        return result;
+    }
+
+    private VictoryResult checkVictoryFromScriptedEvents(Game game, Map<String, Object> context) {
+        for (TriggeredEvent event : game.scriptedEvents()) {
+            if (event instanceof VictoryTriggeredEvent victoryEvent) {
+                VictoryResult victoryResult = victoryEvent.checkVictory(game, context);
+                if (victoryResult.isVictory()) {
+                    return updateAndReturn(victoryResult, game);
+                }
+            }
+        }
+        return VictoryResult.drawResult();
     }
 
     /**
