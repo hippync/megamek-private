@@ -3,121 +3,173 @@ package megamek.server.victory;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 import megamek.common.Game;
 import megamek.common.Player;
 
 class PlayerAgreedVictoryTest {
 
-    private PlayerAgreedVictory victory;
+    @Mock
     private Game game;
-    private Map<String, Object> context;
+
+    private PlayerAgreedVictory victory;
+    private Map<String, Object> ctx;
 
     @BeforeEach
     void setUp() {
+        MockitoAnnotations.openMocks(this);
         victory = new PlayerAgreedVictory();
-        game = mock(Game.class);
-        context = new HashMap<>();
+        ctx = new HashMap<>();
     }
 
     @Test
     void testNoVictoryWhenNoContext() {
-        VictoryResult result = victory.checkVictory(game, context);
-
-        assertFalse(result.isVictory(), "Pas de victoire sans contexte");
+        when(game.isForceVictory()).thenReturn(false);
+        VictoryResult result = victory.checkVictory(game, ctx);
+        assertFalse(result.isVictory());
     }
 
     @Test
     void testPlayerVictoryWhenAllAgree() {
-        Player winner = new Player(1, "Winner");
-        Player loser1 = new Player(2, "Loser1");
-        Player loser2 = new Player(3, "Loser2");
+        // Setup
+        when(game.isForceVictory()).thenReturn(true);
+        when(game.getVictoryPlayerId()).thenReturn(1);
+        when(game.getVictoryTeam()).thenReturn(Player.TEAM_NONE);
 
-        when(loser1.doesNotAdmitDefeat()).thenReturn(false);
-        when(loser2.doesNotAdmitDefeat()).thenReturn(false);
+        Player winningPlayer = mock(Player.class);
+        when(winningPlayer.getId()).thenReturn(1);
+        when(winningPlayer.isObserver()).thenReturn(false);
+        when(winningPlayer.doesNotAdmitDefeat()).thenReturn(false);
+        when(winningPlayer.getTeam()).thenReturn(1);
 
-        when(game.getPlayersList()).thenReturn(List.of(winner, loser1, loser2));
+        Player losingPlayer = mock(Player.class);
+        when(losingPlayer.getId()).thenReturn(2);
+        when(losingPlayer.isObserver()).thenReturn(false);
+        when(losingPlayer.doesNotAdmitDefeat()).thenReturn(false);
+        when(losingPlayer.getTeam()).thenReturn(2);
 
-        context.put("victoryPlayerId", 1);
-        context.put("victoryTeam", Player.TEAM_NONE);
+        List<Player> players = new ArrayList<>();
+        players.add(winningPlayer);
+        players.add(losingPlayer);
+        when(game.getPlayersList()).thenReturn(players);
 
-        VictoryResult result = victory.checkVictory(game, context);
+        // Execute
+        VictoryResult result = victory.checkVictory(game, ctx);
 
-        assertTrue(result.isVictory(), "Devrait être une victoire quand tous les joueurs sont d'accord");
-        assertEquals(1, result.getWinningPlayer(), "Le joueur 1 devrait être le gagnant");
+        // Verify
+        assertTrue(result.isVictory());
+        assertEquals(1, result.getWinningPlayer());
+        assertEquals(Player.TEAM_NONE, result.getWinningTeam());
     }
 
     @Test
     void testNoVictoryWhenPlayerDisagrees() {
-        Player winner = new Player(1, "Winner");
-        Player loser1 = new Player(2, "Loser1");
-        Player loser2 = new Player(3, "Loser2");
+        // Setup
+        when(game.isForceVictory()).thenReturn(true);
+        when(game.getVictoryPlayerId()).thenReturn(1);
+        when(game.getVictoryTeam()).thenReturn(Player.TEAM_NONE);
 
-        when(loser1.doesNotAdmitDefeat()).thenReturn(true);
-        when(loser2.doesNotAdmitDefeat()).thenReturn(false);
+        Player winningPlayer = mock(Player.class);
+        when(winningPlayer.getId()).thenReturn(1);
+        when(winningPlayer.isObserver()).thenReturn(false);
+        when(winningPlayer.doesNotAdmitDefeat()).thenReturn(false);
+        when(winningPlayer.getTeam()).thenReturn(1);
 
-        when(game.getPlayersList()).thenReturn(List.of(winner, loser1, loser2));
+        Player disagreeingPlayer = mock(Player.class);
+        when(disagreeingPlayer.getId()).thenReturn(2);
+        when(disagreeingPlayer.isObserver()).thenReturn(false);
+        when(disagreeingPlayer.doesNotAdmitDefeat()).thenReturn(true);
+        when(disagreeingPlayer.getTeam()).thenReturn(2);
 
-        context.put("victoryPlayerId", 1);
-        context.put("victoryTeam", Player.TEAM_NONE);
+        List<Player> players = new ArrayList<>();
+        players.add(winningPlayer);
+        players.add(disagreeingPlayer);
+        when(game.getPlayersList()).thenReturn(players);
 
-        VictoryResult result = victory.checkVictory(game, context);
+        // Execute
+        VictoryResult result = victory.checkVictory(game, ctx);
 
-        assertFalse(result.isVictory(), "Pas de victoire quand un joueur n'est pas d'accord");
+        // Verify
+        assertFalse(result.isVictory());
     }
 
     @Test
     void testTeamVictoryWhenAllAgree() {
-        Player winner1 = new Player(1, "Winner1");
-        winner1.setTeam(1);
-        Player winner2 = new Player(2, "Winner2");
-        winner2.setTeam(1);
-        Player loser1 = new Player(3, "Loser1");
-        loser1.setTeam(2);
-        Player loser2 = new Player(4, "Loser2");
-        loser2.setTeam(2);
+        // Setup
+        when(game.isForceVictory()).thenReturn(true);
+        when(game.getVictoryPlayerId()).thenReturn(Player.PLAYER_NONE);
+        when(game.getVictoryTeam()).thenReturn(1);
 
-        when(loser1.doesNotAdmitDefeat()).thenReturn(false);
-        when(loser2.doesNotAdmitDefeat()).thenReturn(false);
+        Player team1Player1 = mock(Player.class);
+        when(team1Player1.getId()).thenReturn(1);
+        when(team1Player1.getTeam()).thenReturn(1);
+        when(team1Player1.isObserver()).thenReturn(false);
+        when(team1Player1.doesNotAdmitDefeat()).thenReturn(false);
 
-        when(game.getPlayersList()).thenReturn(List.of(winner1, winner2, loser1, loser2));
+        Player team1Player2 = mock(Player.class);
+        when(team1Player2.getId()).thenReturn(2);
+        when(team1Player2.getTeam()).thenReturn(1);
+        when(team1Player2.isObserver()).thenReturn(false);
+        when(team1Player2.doesNotAdmitDefeat()).thenReturn(false);
 
-        context.put("victoryPlayerId", Player.PLAYER_NONE);
-        context.put("victoryTeam", 1);
+        Player team2Player = mock(Player.class);
+        when(team2Player.getId()).thenReturn(3);
+        when(team2Player.getTeam()).thenReturn(2);
+        when(team2Player.isObserver()).thenReturn(false);
+        when(team2Player.doesNotAdmitDefeat()).thenReturn(false);
 
-        VictoryResult result = victory.checkVictory(game, context);
+        List<Player> players = new ArrayList<>();
+        players.add(team1Player1);
+        players.add(team1Player2);
+        players.add(team2Player);
+        when(game.getPlayersList()).thenReturn(players);
 
-        assertTrue(result.isVictory(), "Devrait être une victoire quand toutes les équipes sont d'accord");
-        assertEquals(1, result.getWinningTeam(), "L'équipe 1 devrait être gagnante");
+        // Execute
+        VictoryResult result = victory.checkVictory(game, ctx);
+
+        // Verify
+        assertTrue(result.isVictory());
+        assertEquals(Player.PLAYER_NONE, result.getWinningPlayer());
+        assertEquals(1, result.getWinningTeam());
     }
 
     @Test
     void testNoVictoryWhenTeamDisagrees() {
-        Player winner1 = new Player(1, "Winner1");
-        winner1.setTeam(1);
-        Player winner2 = new Player(2, "Winner2");
-        winner2.setTeam(1);
-        Player loser1 = new Player(3, "Loser1");
-        loser1.setTeam(2);
-        Player loser2 = new Player(4, "Loser2");
-        loser2.setTeam(2);
+        // Setup
+        when(game.isForceVictory()).thenReturn(true);
+        when(game.getVictoryPlayerId()).thenReturn(Player.PLAYER_NONE);
+        when(game.getVictoryTeam()).thenReturn(1);
 
-        when(loser1.doesNotAdmitDefeat()).thenReturn(true);
-        when(loser2.doesNotAdmitDefeat()).thenReturn(false);
+        Player team1Player = mock(Player.class);
+        when(team1Player.getId()).thenReturn(1);
+        when(team1Player.getTeam()).thenReturn(1);
+        when(team1Player.isObserver()).thenReturn(false);
+        when(team1Player.doesNotAdmitDefeat()).thenReturn(false);
 
-        when(game.getPlayersList()).thenReturn(List.of(winner1, winner2, loser1, loser2));
+        Player team2Player = mock(Player.class);
+        when(team2Player.getId()).thenReturn(2);
+        when(team2Player.getTeam()).thenReturn(2);
+        when(team2Player.isObserver()).thenReturn(false);
+        when(team2Player.doesNotAdmitDefeat()).thenReturn(true);
 
-        context.put("victoryPlayerId", Player.PLAYER_NONE);
-        context.put("victoryTeam", 1);
+        List<Player> players = new ArrayList<>();
+        players.add(team1Player);
+        players.add(team2Player);
+        when(game.getPlayersList()).thenReturn(players);
 
-        VictoryResult result = victory.checkVictory(game, context);
+        // Execute
+        VictoryResult result = victory.checkVictory(game, ctx);
 
-        assertFalse(result.isVictory(), "Pas de victoire quand un membre d'une équipe n'est pas d'accord");
+        // Verify
+        assertFalse(result.isVictory());
     }
 }

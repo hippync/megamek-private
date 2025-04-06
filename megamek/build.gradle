@@ -492,3 +492,9 @@ tasks.withType(Checkstyle) {
         html.required = true
     }
 }
+
+tasks.withType(JavaCompile) {
+    options.fork = true
+    options.forkOptions.jvmArgs += ['-Xmx4g']
+    options.encoding = 'UTF-8'
+}
