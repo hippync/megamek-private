@@ -177,43 +177,79 @@ class VictoryResultTest {
     }
 
     @Test
+    void testFindWinningPlayer() {
+        VictoryResult victoryResult = new VictoryResult(false);
+        victoryResult.setPlayerScore(1, 1);
+        victoryResult.setPlayerScore(2, 2);
+        victoryResult.setPlayerScore(3, 1);
+
+        assertEquals(2, victoryResult.getWinningPlayer(), "Le joueur avec le score le plus élevé devrait gagner");
+    }
+
+    @Test
+    void testFindWinningTeam() {
+        VictoryResult victoryResult = new VictoryResult(false);
+        victoryResult.setTeamScore(1, 1);
+        victoryResult.setTeamScore(2, 2);
+        victoryResult.setTeamScore(3, 1);
+
+        assertEquals(2, victoryResult.getWinningTeam(), "L'équipe avec le score le plus élevé devrait gagner");
+    }
+
+    @Test
     void testCheckAndUpdateVictory_PlayerWin() {
         VictoryResult result = new VictoryResult(true);
         result.setPlayerScore(1, 1.0);
+        result.setPlayerScore(2, 0.0);
 
-        Player player1 = mock(Player.class);
-        when(player1.getId()).thenReturn(1);
-        when(player1.getTeam()).thenReturn(1);
+        Player winner = new Player(1, "Winner");
+        winner.setRanking(1500);
 
-        Player player2 = mock(Player.class);
-        when(player2.getId()).thenReturn(2);
-        when(player2.getTeam()).thenReturn(2);
+        Player loser = new Player(2, "Loser");
+        loser.setRanking(1400);
 
         Game game = mock(Game.class);
-        when(game.getPlayer(1)).thenReturn(player1);
-        when(game.getPlayersList()).thenReturn(List.of(player1, player2));
+        when(game.getPlayer(1)).thenReturn(winner);
+        when(game.getPlayer(2)).thenReturn(loser);
+        when(game.getPlayersList()).thenReturn(List.of(winner, loser));
 
         result.checkAndUpdateVictory(game);
+
+        assertTrue(winner.getRanking() > 1500, "Le gagnant devrait avoir un meilleur classement");
+        assertTrue(loser.getRanking() < 1400, "Le perdant devrait avoir un moins bon classement");
     }
 
     @Test
     void testCheckAndUpdateVictory_TeamWin() {
         VictoryResult result = new VictoryResult(true);
         result.setTeamScore(1, 1.0);
+        result.setTeamScore(2, 0.0);
 
-        Player player1 = mock(Player.class);
-        when(player1.getId()).thenReturn(1);
-        when(player1.getTeam()).thenReturn(1);
+        Player winner1 = new Player(1, "Winner1");
+        winner1.setRanking(1500);
+        winner1.setTeam(1);
 
-        Player player2 = mock(Player.class);
-        when(player2.getId()).thenReturn(2);
-        when(player2.getTeam()).thenReturn(2);
+        Player winner2 = new Player(2, "Winner2");
+        winner2.setRanking(1450);
+        winner2.setTeam(1);
+
+        Player loser1 = new Player(3, "Loser1");
+        loser1.setRanking(1400);
+        loser1.setTeam(2);
+
+        Player loser2 = new Player(4, "Loser2");
+        loser2.setRanking(1350);
+        loser2.setTeam(2);
 
         Game game = mock(Game.class);
-        when(game.getPlayer(1)).thenReturn(player1);
-        when(game.getPlayersList()).thenReturn(List.of(player1, player2));
+        when(game.getPlayersList()).thenReturn(List.of(winner1, winner2, loser1, loser2));
 
         result.checkAndUpdateVictory(game);
+
+        assertTrue(winner1.getRanking() > 1500, "Le gagnant 1 devrait avoir un meilleur classement");
+        assertTrue(winner2.getRanking() > 1450, "Le gagnant 2 devrait avoir un meilleur classement");
+        assertTrue(loser1.getRanking() < 1400, "Le perdant 1 devrait avoir un moins bon classement");
+        assertTrue(loser2.getRanking() < 1350, "Le perdant 2 devrait avoir un moins bon classement");
     }
 
     @Test
@@ -245,6 +281,35 @@ class VictoryResultTest {
         assertTrue(winner1.getRanking() > 1500, "Winner1 should have a higher ranking");
         assertTrue(winner2.getRanking() > 1450, "Winner2 should have a higher ranking");
         assertTrue(loser.getRanking() < 1400, "Loser should have a lower ranking");
+    }
+
+    @Test
+    void testVictoryResultUpdatesRanking() {
+        // Arrange : deux vrais joueurs
+        Player player1 = new Player(1, "Alice");
+        player1.setRanking(1500);
+        player1.setTeam(1);
+
+        Player player2 = new Player(2, "Bob");
+        player2.setRanking(1400);
+        player2.setTeam(2);
+
+        // Setup du jeu simulé
+        Game game = mock(Game.class);
+        when(game.getPlayersList()).thenReturn(List.of(player1, player2));
+        when(game.getPlayer(1)).thenReturn(player1);
+        when(game.getPlayer(2)).thenReturn(player2);
+
+        // Score individuel : Alice gagne
+        VictoryResult result = new VictoryResult(true);
+        result.setPlayerScore(1, 1.0);
+        result.setPlayerScore(2, 0.0);
+
+        result.checkAndUpdateVictory(game);
+
+        // Assert : les rankings ont été modifiés
+        assertTrue(player1.getRanking() > 1500, "Alice devrait avoir gagné du ranking");
+        assertTrue(player2.getRanking() < 1400, "Bob devrait avoir perdu du ranking");
     }
 
 }
