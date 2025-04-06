@@ -247,4 +247,33 @@ class VictoryResultTest {
         assertTrue(loser.getRanking() < 1400, "Loser should have a lower ranking");
     }
 
+    @Test
+    void testVictoryResultUpdatesRanking() {
+        // Arrange : deux vrais joueurs
+        Player player1 = new Player(1, "Alice");
+        player1.setRanking(1500);
+        player1.setTeam(1);
+
+        Player player2 = new Player(2, "Bob");
+        player2.setRanking(1400);
+        player2.setTeam(2);
+
+        // Setup du jeu simulé
+        Game game = mock(Game.class);
+        when(game.getPlayersList()).thenReturn(List.of(player1, player2));
+        when(game.getPlayer(1)).thenReturn(player1);
+        when(game.getPlayer(2)).thenReturn(player2);
+
+        // Score individuel : Alice gagne
+        VictoryResult result = new VictoryResult(true);
+        result.setPlayerScore(1, 1.0);
+        result.setPlayerScore(2, 0.0);
+
+        result.checkAndUpdateVictory(game);
+
+        // Assert : les rankings ont été modifiés
+        assertTrue(player1.getRanking() > 1500, "Alice devrait avoir gagné du ranking");
+        assertTrue(player2.getRanking() < 1400, "Bob devrait avoir perdu du ranking");
+    }
+
 }
