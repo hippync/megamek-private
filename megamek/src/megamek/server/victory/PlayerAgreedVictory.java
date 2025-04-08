@@ -43,16 +43,14 @@ public class PlayerAgreedVictory implements VictoryCondition, Serializable {
         boolean forceVictory = true;
 
         // Individual victory
-        if (victoryPlayerId != Player.PLAYER_NONE) {
-            if (activePlayers.stream().filter(p -> p.getId() != victoryPlayerId).anyMatch(Player::doesNotAdmitDefeat)) {
-                forceVictory = false;
-            }
+        if (victoryPlayerId != Player.PLAYER_NONE &&
+                  anyOtherPlayerDoesNotAdmitDefeat(activePlayers, victoryPlayerId)) {
+            return VictoryResult.noResult();
         }
         // Team victory
-        if (victoryTeam != Player.TEAM_NONE) {
-            if (activePlayers.stream().filter(p -> p.getTeam() != victoryTeam).anyMatch(Player::doesNotAdmitDefeat)) {
-                forceVictory = false;
-            }
+        if (victoryTeam != Player.TEAM_NONE &&
+                  anyOtherTeamPlayerDoesNotAdmitDefeat(activePlayers, victoryTeam)) {
+            return VictoryResult.noResult();
         }
 
         if (forceVictory) {
@@ -60,5 +58,17 @@ public class PlayerAgreedVictory implements VictoryCondition, Serializable {
         } else {
             return VictoryResult.noResult();
         }
+    }
+
+    private boolean anyOtherPlayerDoesNotAdmitDefeat(List<Player> players, int victoryPlayerId) {
+        return players.stream()
+                     .filter(p -> p.getId() != victoryPlayerId)
+                     .anyMatch(Player::doesNotAdmitDefeat);
+    }
+
+    private boolean anyOtherTeamPlayerDoesNotAdmitDefeat(List<Player> players, int victoryTeam) {
+        return players.stream()
+                     .filter(p -> p.getTeam() != victoryTeam)
+                     .anyMatch(Player::doesNotAdmitDefeat);
     }
 }
