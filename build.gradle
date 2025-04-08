@@ -19,14 +19,13 @@ subprojects {
     version = '0.50.05-SNAPSHOT'
 }
 
-sonar {
+sonarqube {
     properties {
-        property "sonar.projectKey", "hippync_megamek-private"
-        property "sonar.organization", "hippync"
         property "sonar.host.url", "https://sonarcloud.io"
+        property "sonar.organization", "hippync"
+        property "sonar.projectKey", "hippync_megamek-private"
     }
 }
-
 
 // A properties_local.gradle file can be used to override any of the above options. For instance,
 // rootProject.ext.mmGitRoot = 'file:///path/to/local/repo' will cause the release target to clone a
